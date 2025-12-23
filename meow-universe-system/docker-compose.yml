@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  # 資料庫 (由 Docker 自動產生，不需要您寫程式碼)
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: meow_universe
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d
+
+  # 後端 (自動讀取 backend 資料夾)
+  api:
+    build: ./backend
+    ports: ["3000:3000"]
+    depends_on: [db]
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/meow_universe
+
+  # 商家後台 (自動讀取 frontend-merchant 資料夾)
+  merchant-ui:
+    build: ./frontend-merchant
+    ports: ["8080:80"]
