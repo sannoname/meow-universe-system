@@ -1,23 +1,38 @@
 version: '3.8'
 services:
-  # 資料庫 (由 Docker 自動產生，不需要您寫程式碼)
+  # 資料庫
   db:
     image: postgres:15-alpine
+    container_name: meow_db
+    restart: always
     environment:
-      POSTGRES_DB: meow_universe
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432" # [重要] 開啟這個孔，DBeaver 才能連
     volumes:
       - ./init-db:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
 
-  # 後端 (自動讀取 backend 資料夾)
+  # 後端 API
   api:
     build: ./backend
-    ports: ["3000:3000"]
-    depends_on: [db]
+    container_name: meow_backend
+    restart: always
+    ports: [ "3000:3000" ]
+    depends_on: [ db ]
     environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/meow_universe
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${PORT}
 
-  # 商家後台 (自動讀取 frontend-merchant 資料夾)
+  # 商家後台
   merchant-ui:
     build: ./frontend-merchant
-    ports: ["8080:80"]
+    container_name: meow_merchant_ui
+    restart: always
+    ports: [ "8080:80" ]
+
+volumes:
+  postgres-data:
